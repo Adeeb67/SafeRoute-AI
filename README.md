@@ -154,15 +154,6 @@ or
 npm run dev
 ```
 
-# 📸 Screenshots
-
-Add screenshots here:
-
-* Login Page
-* Dashboard
-* SOS Emergency Page
-* AI Assistant
-* Rescue Dashboard
 
 # 🎯 Future Enhancements
 
