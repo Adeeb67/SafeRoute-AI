@@ -1,0 +1,132 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CITIZEN
+  RESCUE_TEAM
+  ADMIN
+}
+
+enum DisasterType {
+  FLOOD
+  EARTHQUAKE
+  CYCLONE
+  WILDFIRE
+  LANDSLIDE
+}
+
+enum RequestStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  RESCUED
+}
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  password       String
+  name           String
+  role           Role            @default(CITIZEN)
+  phone          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  rescueRequests RescueRequest[] @relation("CitizenRequests")
+  assignedTeams  RescueRequest[] @relation("RescueTeamAssignments")
+  notifications  Notification[]
+  chatMessages   ChatMessage[]
+  messages       Message[]
+}
+
+model Disaster {
+  id          String       @id @default(uuid())
+  title       String
+  type        DisasterType
+  description String
+  latitude    Float
+  longitude   Float
+  radius      Float
+  severity    String
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Shelter {
+  id                 String   @id @default(uuid())
+  name               String
+  latitude           Float
+  longitude          Float
+  capacity           Int
+  occupancy          Int      @default(0)
+  resourcesAvailable String[]
+  contactNumber      String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Hospital {
+  id                    String   @id @default(uuid())
+  name                  String
+  latitude              Float
+  longitude             Float
+  contact               String
+  emergencyAvailability Boolean  @default(true)
+  bedsAvailable         Int      @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model RescueRequest {
+  id             String        @id @default(uuid())
+  citizenId      String
+  citizen        User          @relation("CitizenRequests", fields: [citizenId], references: [id], onDelete: Cascade)
+  rescueTeamId   String?
+  rescueTeam     User?         @relation("RescueTeamAssignments", fields: [rescueTeamId], references: [id], onDelete: SetNull)
+  latitude       Float
+  longitude      Float
+  status         RequestStatus @default(PENDING)
+  severity       String        @default("HIGH")
+  emergencyType  String        @default("GENERAL")
+  numberOfPeople Int           @default(1)
+  description    String?
+  photoData      String?
+  messages       Message[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Message {
+  id              String        @id @default(uuid())
+  rescueRequestId String
+  rescueRequest   RescueRequest @relation(fields: [rescueRequestId], references: [id], onDelete: Cascade)
+  senderId        String
+  sender          User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content         String
+  createdAt       DateTime      @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  isBot     Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
